@@ -73,6 +73,8 @@ class Workspaces : public AModule, public EventHandler {
   bool windowRewriteConfigUsesTitle() const { return m_anyWindowRewriteRuleUsesTitle; }
   const IconLoader& iconLoader() const { return m_iconLoader; }
 
+  bool disableClick() const { return m_disableClick; };
+
  private:
   void onEvent(const std::string& e) override;
   void updateWindowCount();
@@ -151,6 +153,8 @@ class Workspaces : public AModule, public EventHandler {
   void loadPersistentWorkspacesFromConfig(Json::Value const& clientsJson);
   void loadPersistentWorkspacesFromWorkspaceRules(const Json::Value& clientsJson);
 
+  void populatedisableClickByConfig(const Json::Value& config);
+
   bool m_allOutputs = false;
   bool m_showSpecial = false;
   bool m_activeOnly = false;
@@ -160,6 +164,7 @@ class Workspaces : public AModule, public EventHandler {
   bool m_moveToMonitor = false;
   bool m_uniqueIcons = false;
   bool m_barScroll = false;
+  bool m_disableClick = false;
   Json::Value m_persistentWorkspaceConfig;
 
   // Map for windows stored in workspaces not present in the current bar.
