@@ -210,6 +210,11 @@ This setting is ignored if *workspace-taskbar.enable* is set to true.
 	default: false ++
 	Enables this module to consume all left over space dynamically.
 
+*disable-click*: ++
+	typeof: bool ++
+	default: false ++
+	Disables workspace click.
+
 # FORMAT REPLACEMENTS
 
 *{id}*: id of workspace assigned by compositor
