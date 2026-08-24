@@ -665,6 +665,7 @@ auto Workspaces::parseConfig(const Json::Value& config) -> void {
   populateBoolConfig(config, "move-to-monitor", m_moveToMonitor);
   populateBoolConfig(config, "unique-icons", m_uniqueIcons);
   populateBoolConfig(config, "enable-bar-scroll", m_barScroll);
+  populateBoolConfig(config, "disable-click", m_disableClick);
 
   m_persistentWorkspaceConfig = config.get("persistent-workspaces", Json::Value());
   populateSortByConfig(config);
@@ -753,6 +754,14 @@ auto Workspaces::populateIgnoreWorkspacesConfig(const Json::Value& config) -> vo
         spdlog::error("Not a string: '{}'", workspaceRegex);
       }
     }
+  }
+}
+
+auto Workspaces::populatedisableClickByConfig(const Json::Value& config) -> void {
+  const auto& configdisableClick = config["disable-click"];
+
+  if (configdisableClick.isBool()) {
+    m_disableClick = configdisableClick.asBool();
   }
 }
 
@@ -852,7 +861,7 @@ auto Workspaces::populateWorkspaceTaskbarConfig(const Json::Value& config) -> vo
     auto posStr = workspaceTaskbar["active-window-position"].asString();
     try {
       m_activeWindowPosition =
-        util::parseStringToEnum<ActiveWindowPosition>(posStr, m_activeWindowPositionMap);
+          util::parseStringToEnum<ActiveWindowPosition>(posStr, m_activeWindowPositionMap);
     } catch (const std::invalid_argument& e) {
       spdlog::warn(
           "Invalid string representation for active-window-position. Falling back to 'none'.");

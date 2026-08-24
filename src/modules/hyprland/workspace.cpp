@@ -203,6 +203,9 @@ bool Workspace::handleLeave(GdkEventCrossing* /*event*/) {
   return false;
 }
 bool Workspace::handleClicked(GdkEventButton* bt) const {
+  if (m_workspaceManager.disableClick()) {
+    return false;
+  }
   if (bt->type == GDK_BUTTON_PRESS) {
     try {
       if (id() > 0) {  // normal
