@@ -1133,32 +1133,64 @@ void Workspaces::updateWorkspaceStates() {
   std::string currentWorkspaceName =
       currentWorkspace.isMember("name") ? currentWorkspace["name"].asString() : "";
 
+  // 1. Descobrir qual é o monitor da special workspace ativa
+  std::string specialWorkspaceMonitor = "";
+  if (!m_activeSpecialWorkspaceName.empty()) {
+    auto specialIt = std::ranges::find_if(updatedWorkspaces, [&](const auto& w) {
+      std::string name = w.isMember("name") ? w["name"].asString() : "";
+      int id = w.isMember("id") ? w["id"].asInt() : 0;
+      return (!m_activeSpecialWorkspaceName.empty() && name == m_activeSpecialWorkspaceName) ||
+             id < 0 || name.starts_with("special:");
+    });
+
+    if (specialIt != updatedWorkspaces.end() && specialIt->isMember("monitor")) {
+      specialWorkspaceMonitor = (*specialIt)["monitor"].asString();
+    }
+  }
+
   for (auto& workspace : m_workspaces) {
     bool isActiveByName =
         !currentWorkspaceName.empty() && workspace->name() == currentWorkspaceName;
 
-    workspace->setActive(
-        workspace->id() == m_activeWorkspaceId || isActiveByName ||
-        (workspace->isSpecial() && workspace->name() == m_activeSpecialWorkspaceName));
+    // 2. Verifica se a workspace está no mesmo monitor da special workspace
+    bool isOnSpecialMonitor = !specialWorkspaceMonitor.empty() && 
+                              workspace->output() == specialWorkspaceMonitor;
+
+    // 3. Aplica o setActive apenas se NÃO estiver no mesmo monitor da special workspace
+    if (!isOnSpecialMonitor) {
+      workspace->setActive(
+          ((m_activeBy == ActiveMethod::ID || m_activeBy == ActiveMethod::DEFAULT) &&
+           workspace->id() == m_activeWorkspaceId && !workspace->isSpecial()) ||
+          (m_activeBy == ActiveMethod::NAME && isActiveByName) ||
+          (workspace->isSpecial() && workspace->name() == m_activeSpecialWorkspaceName));
+    } else {
+      workspace->setActive(false);
+    }
+
     if (workspace->isActive() && workspace->isUrgent()) {
       workspace->setUrgent(false);
     }
     workspace->setVisible(std::ranges::find(visibleWorkspaces, workspace->id()) !=
                           visibleWorkspaces.end());
+    
     std::string& workspaceIcon = m_iconsMap[""];
     if (m_withIcon) {
       workspaceIcon = workspace->selectString(m_iconsMap);
     }
+    
     std::string& workspaceTooltip = m_tooltipMap[""];
     if (m_withTooltip) {
       workspaceTooltip = workspace->selectString(m_tooltipMap);
     }
+    
     auto updatedWorkspace = std::ranges::find_if(updatedWorkspaces, [&workspace](const auto& w) {
       return w["id"].asInt() == workspace->id();
     });
+    
     if (updatedWorkspace != updatedWorkspaces.end()) {
       workspace->setOutput((*updatedWorkspace)["monitor"].asString());
     }
+    
     workspace->update(workspaceIcon, workspaceTooltip);
   }
 }
